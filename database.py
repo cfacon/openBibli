@@ -28,7 +28,8 @@ class Database:
             prenom TEXT,
             dateDeNaissance DATE,
             adresse TEXT,
-            tel TEXT
+            tel TEXT,
+            code TEXT
             );
         
         CREATE TABLE IF NOT EXISTS pret(
@@ -82,6 +83,14 @@ class Database:
         # except sqlite3.Error as er:
         #     print('SQLite error: %s' % (' '.join(er.args)))
 
+        try :
+            self.cur.executescript("""
+            ALTER TABLE utilisateurs ADD COLUMN code TEXT default 0;
+            """)
+            self.conn.commit()
+        except sqlite3.Error as er:
+            print('SQLite error: %s' % (' '.join(er.args)))
+
 
     def insert_livre(self, livre):
         print("try insert : " + livre["isbn"])
@@ -99,8 +108,8 @@ class Database:
     def insertUtilisateurs(self, utilisateur):
         print("try insert : " + utilisateur["nom"])
         #donnee = [isbn, title]
-        self.cur.execute('''INSERT INTO utilisateurs (nom, prenom, dateDeNaissance, adresse, tel) VALUES (?, ?, ?, ?, ?)''', 
-            [utilisateur["nom"], utilisateur["prenom"], utilisateur["dateDeNaissance"], utilisateur["adresse"], utilisateur["tel"]])        
+        self.cur.execute('''INSERT INTO utilisateurs (nom, prenom, dateDeNaissance, adresse, tel, code) VALUES (?, ?, ?, ?, ?,?)''', 
+            [utilisateur["nom"], utilisateur["prenom"], utilisateur["dateDeNaissance"], utilisateur["adresse"], utilisateur["tel"], utilisateur["code"]])        
         self.conn.commit()
 
     def insertPret(self, isbn, utilisateur_id):
@@ -128,12 +137,12 @@ class Database:
     #     rows = self.cur.fetchall()
     #     return rows
 
-    def filterBook(self, titre, auteur, mediatheque):
-        print("filtre sur titre=" + str(titre) + " auteur=" + str(auteur)+ " mediatheque=" + str(mediatheque))
+    def filterBook(self, titre, auteur,isbn, mediatheque):
+        print("filtre sur titre=" + str(titre) + " auteur=" + str(auteur)+ " mediatheque=" + str(mediatheque)+ " isbn=" + str(isbn))
         self.cur.execute(
-        "select l.titre, l.auteur, l.auteurComp, l.serie, l.tome, l.isbn, l.code, l.mediatheque, l.livre_id, p.datePret from livres l LEFT JOIN pret p on p.fk_livre = l.livre_id AND dateRetour is null where titre like ? and auteur like ? and mediatheque like ?",
+        "select l.titre, l.auteur, l.auteurComp, l.serie, l.tome, l.isbn, l.code, l.mediatheque, l.livre_id, p.datePret from livres l LEFT JOIN pret p on p.fk_livre = l.livre_id AND dateRetour is null where titre like ? and auteur like ? and mediatheque like ? and isbn like ?",
         # "select titre, auteur,auteurComp, serie, tome,isbn,code, mediatheque, livre_id from livres where titre like ? and auteur like ? and mediatheque like ?",
-        ('%'+titre+'%','%'+auteur+'%', mediatheque))
+        ('%'+titre+'%','%'+auteur+'%', mediatheque,'%'+isbn+'%'))
         rows = self.cur.fetchall()
         return rows
 
@@ -176,7 +185,7 @@ class Database:
 
     def update_user(self, utilisateur, utilisateur_id):
         print("try update"+ utilisateur_id)
-        self.cur.execute("UPDATE utilisateurs SET nom=?,prenom=?,dateDeNaissance=?,adresse=?,tel=? WHERE utilisateur_id=?", (utilisateur["nom"], utilisateur["prenom"], utilisateur["dateDeNaissance"], utilisateur["adresse"], utilisateur["tel"], utilisateur_id,))
+        self.cur.execute("UPDATE utilisateurs SET nom=?,prenom=?,dateDeNaissance=?,adresse=?,tel=?,code=? WHERE utilisateur_id=?", (utilisateur["nom"], utilisateur["prenom"], utilisateur["dateDeNaissance"], utilisateur["adresse"], utilisateur["tel"],utilisateur["code"], utilisateur_id,))
         self.conn.commit()
 
 # obsolete

@@ -77,6 +77,7 @@ class ecranCatalogue:
         rows = self.parent.db.fetch("select l.titre, l.auteur, l.auteurComp, l.serie, l.tome, l.isbn, l.code, l.mediatheque, l.livre_id, p.datePret from livres l LEFT JOIN pret p on p.fk_livre = l.livre_id AND dateRetour is null ")
         self.fill_treeview(tv_catalogue, rows)
 
+    # se repositionne sur le dernier element de la liste
     def jump_to_last(event, tree):
         first = tree.get_children()[0]
         # if tree.focus() == first:
@@ -111,7 +112,8 @@ class ecranCatalogue:
 
         self.bt_maj_catalogue['state'] = DISABLED
         self.bt_supprimer_catalogue['state'] = DISABLED
-        self.jump_to_last(tv_catalogue)
+        if (len(rows) > 0):
+            self.jump_to_last(tv_catalogue)
 
 
     def filtre_liste_catalogue(self, tv_catalogue):
@@ -120,7 +122,7 @@ class ecranCatalogue:
             mediaFiltre = "1"
 
 
-        rows = self.parent.db.filterBook(self.sv_titre_filtre.get(),self.sv_auteur_filtre.get(),mediaFiltre)
+        rows = self.parent.db.filterBook(self.sv_titre_filtre.get(),self.sv_auteur_filtre.get(),self.sv_isbn_filtre.get(),mediaFiltre)
         self.fill_treeview(tv_catalogue, rows)
 
     def select_tv_catalogue(self, event):
@@ -185,6 +187,7 @@ class ecranCatalogue:
                 pass
 
     def ajouter_catalogue(self,tv_catalogue):
+        # TODO verifier les valeurs des champs !! surtout la forme de l'isbn
         self.sv_log.set("")
         self.parent.logger.info('--ajouter_catalogue--' + str(self.sv_isbn.get()))
 
@@ -205,16 +208,16 @@ class ecranCatalogue:
                 self.populate_liste_catalogue(tv_catalogue)
 
                 #clean ISBN et formulaire
-                self.sv_isbn.set("")
-                self.sv_isbn.set("")
-                self.sv_titre.set("")
-                self.sv_auteur.set("")
-                self.sv_auteurComp.set("")
-                self.sv_serie.set("")
-                self.sv_tome.set("")
-                self.sv_log.set("")
+                self.sv_isbn = StringVar()
+                self.sv_titre = StringVar()
+                self.sv_auteur = StringVar()
+                self.sv_auteurComp = StringVar()
+                self.sv_serie = StringVar()
+                self.sv_tome = StringVar()
+                self.sv_log = StringVar()
+                self.e_isbn.focus()
             except Exception as e:
-                self.parent.logger.exception('--ajouter_catalogue--' + str(e))                
+                self.parent.logger.exception('--erreur dans ajouter_catalogue --> ' + str(e))                
             except IndexError:
                 pass
 
@@ -274,6 +277,7 @@ class ecranCatalogue:
 
             self.sv_titre_filtre = StringVar()
             self.sv_auteur_filtre = StringVar()
+            self.sv_isbn_filtre = StringVar()
             self.sv_mediatheque_filtre = StringVar()
             self.sv_mediatheque_filtre.set(0)
 
@@ -286,16 +290,18 @@ class ecranCatalogue:
                     ,bg='red'
                 )
 
-            frame.grid(row=1, column=0, columnspan=7, rowspan=7)
+            frame.grid(row=1, column=0, columnspan=8, rowspan=8)
 
             # Filtre
             lb_titre_filtre = Label(self.pr_bottom, text = "Filtre titre :").grid(row = 0, column = 0)
             e_titre_filtre = Entry(self.pr_bottom,textvariable=self.sv_titre_filtre,).grid(row = 0, column = 1)
             lb_auteur_filtre = Label(self.pr_bottom, text = "Auteur :").grid(row = 0, column = 2)
             e_auteur_filtre = Entry(self.pr_bottom,textvariable=self.sv_auteur_filtre,width=20).grid(row = 0, column = 3)
-            c1f = Checkbutton(self.pr_bottom, text='Médiathèque',variable=self.sv_mediatheque_filtre, onvalue=1, offvalue=0).grid(row = 0, column = 4)
+            lb_isbn_filtre = Label(self.pr_bottom, text = "ISBN :").grid(row = 0, column = 4)
+            e_isbn_filtre = Entry(self.pr_bottom,textvariable=self.sv_isbn_filtre,width=20).grid(row = 0, column = 5)
+            c1f = Checkbutton(self.pr_bottom, text='Médiathèque',variable=self.sv_mediatheque_filtre, onvalue=1, offvalue=0).grid(row = 0, column = 6)
             self.bt_filtre = Button(self.pr_bottom, text="Filtrer", command=lambda: self.filtre_liste_catalogue(self.tv_catalogue))
-            self.bt_filtre.grid(row = 0, column = 5,padx=2)
+            self.bt_filtre.grid(row = 0, column = 7,padx=2)
 
 
             # Bouton d'action

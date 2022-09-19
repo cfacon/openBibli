@@ -33,22 +33,22 @@ class ecranUtilisateurs:
         curMainWindowWidth = self.parent.fenetre.winfo_width()
         print("The width of Tkinter window:", curMainWindowWidth)
 
-        maxWidth = round((curMainWindowWidth-95) / 5)
+        maxWidth = round((curMainWindowWidth-95) / 6)
 
         # init grid utilisateurs
-        columns = [ 'nom', 'prenom', 'dateDeNaissance','adresse', 'tel']
+        columns = [ 'nom', 'prenom', 'dateDeNaissance','adresse', 'tel', 'code']
         self.tv_utilisateur = ttk.Treeview(frame, columns=columns, show="headings",style='info.Treeview')
         for col in columns:
             self.tv_utilisateur.column(col, width=maxWidth)
             self.tv_utilisateur.heading(col, text=col)
         self.tv_utilisateur.bind('<<TreeviewSelect>>', lambda event : self.select_tv_utilisateur(event))
         self.populate_liste_utilisateur(self.tv_utilisateur)
-        self.tv_utilisateur.grid(row = 1, column = 0, columnspan = 5)
+        self.tv_utilisateur.grid(row = 1, column = 0, columnspan = 6)
 
         return self.tv_utilisateur
 
     def populate_liste_utilisateur(self, tv_utilisateur):
-        rows = self.parent.db.fetch("Select nom,prenom,dateDeNaissance,adresse,tel,utilisateur_id from utilisateurs")
+        rows = self.parent.db.fetch("Select nom,prenom,dateDeNaissance,adresse,tel,code,utilisateur_id from utilisateurs")
 
         tv_utilisateur.tag_configure('oddrow', background='#FFFFFF')
         tv_utilisateur.tag_configure('even', background='#AFAFDF')
@@ -79,45 +79,48 @@ class ecranUtilisateurs:
             self.sv_dateDeNaissance.set(self.tv_utilisateur.item(index)['values'][2])
             self.sv_adresse.set(self.tv_utilisateur.item(index)['values'][3])
             self.sv_tel.set(self.tv_utilisateur.item(index)['values'][4])
+            self.sv_code.set(self.tv_utilisateur.item(index)['values'][5])
         except Exception as e:
             self.parent.logger.exception('--select_tv_utilisateur--' + str(e))   
         
     def supprimer_utilisateur(self,tv_utilisateur):
         index = tv_utilisateur.selection()[0]
-        if askyesno('Titre 1', 'Êtes-vous sûr de vouloir supprimer ' +str(tv_utilisateur.item(index)['values'][1]) + ' '+str(tv_utilisateur.item(index)['values'][2]) + ' ?' + ' ID='+str(tv_utilisateur.item(index)['values'][5]) ):       
+        if askyesno('Titre 1', 'Êtes-vous sûr de vouloir supprimer ' +str(tv_utilisateur.item(index)['values'][1]) + ' '+str(tv_utilisateur.item(index)['values'][2]) + ' ?' + ' ID='+str(tv_utilisateur.item(index)['values'][6]) ):       
             # showwarning('Titre 2', 'Tant pis...')
             try:
                 global selected_item
                 selected_item = tv_utilisateur.item(index)['values']
-                self.parent.db.remove_user(str(selected_item[5]))
+                self.parent.db.remove_user(str(selected_item[6]))
                 self.populate_liste_utilisateur(tv_utilisateur)
             except Exception as e:
                 self.parent.logger.exception('--supprimer_utilisateur--' + str(e))   
 
     def modifier_utilisateur(self,tv_utilisateur):
         index = tv_utilisateur.selection()[0]
-        if askyesno('Titre 1', 'Êtes-vous sûr de vouloir modifier ' +str(tv_utilisateur.item(index)['values'][1]) + ' '+str(tv_utilisateur.item(index)['values'][2]) + ' ?' + ' ID='+str(tv_utilisateur.item(index)['values'][5]) ):       
+        if askyesno('Titre 1', 'Êtes-vous sûr de vouloir modifier ' +str(tv_utilisateur.item(index)['values'][1]) + ' '+str(tv_utilisateur.item(index)['values'][2]) + ' ?' + ' ID='+str(tv_utilisateur.item(index)['values'][6]) ):       
             # showwarning('Titre 2', 'Tant pis...')
             try:
-                resultats = {"nom":"","prenom":"","dateDeNaissance":"","adresse":" ","tel":" "}
+                resultats = {"nom":"","prenom":"","dateDeNaissance":"","adresse":" ","tel":" ","code":" "}
                 resultats["nom"] = self.sv_nom.get()
                 resultats["prenom"] = self.sv_prenom.get()
                 resultats["dateDeNaissance"] = self.sv_dateDeNaissance.get()
                 resultats["adresse"] = self.sv_adresse.get()
                 resultats["tel"] = self.sv_tel.get()                
-                self.parent.db.update_user(resultats,str(tv_utilisateur.item(index)['values'][5]))
+                resultats["code"] = self.sv_code.get()
+                self.parent.db.update_user(resultats,str(tv_utilisateur.item(index)['values'][6]))
                 self.populate_liste_utilisateur(tv_utilisateur)
             except Exception as e:
                 self.parent.logger.exception('--modifier_utilisateur--' + str(e))  
 
     def ajouter_utilisateur(self,tv_utilisateur):
         try:
-            resultats = {"nom":"","prenom":"","dateDeNaissance":"","adresse":" ","tel":" "}
+            resultats = {"nom":"","prenom":"","dateDeNaissance":"","adresse":" ","tel":" ","code":" "}
             resultats["nom"] = self.sv_nom.get()
             resultats["prenom"] = self.sv_prenom.get()
             resultats["dateDeNaissance"] = self.sv_dateDeNaissance.get()
             resultats["adresse"] = self.sv_adresse.get()
-            resultats["tel"] = self.sv_tel.get()                
+            resultats["tel"] = self.sv_tel.get()
+            resultats["code"] = self.sv_code.get()
             self.parent.db.insertUtilisateurs(resultats)
             self.populate_liste_utilisateur(tv_utilisateur)
         except Exception as e:
@@ -141,6 +144,7 @@ class ecranUtilisateurs:
             self.sv_dateDeNaissance = StringVar()
             self.sv_adresse = StringVar()
             self.sv_tel = StringVar()
+            self.sv_code = StringVar()
 
 
             frame = Frame(self.pr_bottom,
@@ -184,6 +188,9 @@ class ecranUtilisateurs:
 
             lb_tel = Label(frame, text = "Tel :").grid(row = 8, column = 0)
             e_tel = Entry(frame,textvariable=self.sv_tel).grid(row = 8, column = 1,columnspan = 4)
+
+            lb_code = Label(frame, text = "Identifiant :").grid(row = 9, column = 0)
+            e_code = Entry(frame,textvariable=self.sv_code).grid(row = 9, column = 1,columnspan = 4)
 
         # bt_search=Button(pr_top, text="Rechercher", command=lambda: self.Rechercher(tv_catalogue)).grid(row = 1, column = 2)
 

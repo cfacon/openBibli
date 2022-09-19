@@ -34,14 +34,14 @@ class ecranPret:
     def populate_liste_pret(self, tv, withHistory):
         print("populate_liste_pret"+str(self.utilisateur_id))
 
-        query = """Select l.isbn, l.titre, p.datePret, p.dateRetour from pret p, utilisateurs u, livres l 
+        query = """Select l.isbn, l.titre, p.datePret, p.dateRetour, l.mediatheque from pret p, utilisateurs u, livres l 
         where p.fk_utilisateur = u.utilisateur_id
         and u.utilisateur_id = """+str(self.utilisateur_id)+"""
         and p.fk_livre = l.livre_id
         and dateRetour is null
         """
         if withHistory:
-            query = """Select l.isbn, l.titre, p.datePret, p.dateRetour from pret p, utilisateurs u, livres l 
+            query = """Select l.isbn, l.titre, p.datePret, p.dateRetour, l.mediatheque from pret p, utilisateurs u, livres l 
         where p.fk_utilisateur = u.utilisateur_id
         and u.utilisateur_id = """+str(self.utilisateur_id)+"""
         and p.fk_livre = l.livre_id
@@ -61,6 +61,12 @@ class ecranPret:
         for row in rows:
             n = n+1
             print (row)
+            row = list(row)
+            if (row[4] == 1) :
+                row[4] = 'oui'
+            else : 
+                row[4] = 'non'
+                            
             if (n % 2) == 0:
                 tv.insert('', 'end', values=row,tags = ('oddrow',))
             else:
@@ -73,7 +79,7 @@ class ecranPret:
         self.lb_utilisateur.delete(0,'end')
 
         for item in data:
-            self.lb_utilisateur.insert(END,item[0]+" "+item[1])
+            self.lb_utilisateur.insert(END,item[0]+" "+item[1]+" "+item[2])
 
     def CurSelet(self, event):
         self.sv_nom_selectionne.set("------")
@@ -95,6 +101,7 @@ class ecranPret:
         self.sv_bt_emprunter.set("Emprunter pour "+selectionName)
         self.sv_listeEmprunt.set("3 - Liste des emprunts de "+selectionName)
 
+# autocomplete pour recherche user
     def check(self, e):    
         print("check")
         typed = self.sv_nom_selectionne.get()
@@ -103,7 +110,7 @@ class ecranPret:
         else:
             data = []
             for item in self.utilisateurs:
-                if typed.lower() in item[0].lower()+" "+item[1].lower():
+                if typed.lower() in item[0].lower()+" "+item[1].lower()+" "+item[2].lower():
                     data.append(item)
 
 
@@ -115,7 +122,7 @@ class ecranPret:
     # tree view qui affiche la liste des prêts d'un user
     def build_tv_pret(self, frame):
         # init grid pret
-        columns = [ 'isbn', 'titre', 'dateDePret', 'dateRetour']
+        columns = [ 'isbn', 'titre', 'dateDePret', 'dateRetour','mediatheque']
 
         self.tv_pret = ttk.Treeview(frame, columns=columns, show="headings",style='info.Treeview')
         for col in columns:
@@ -128,7 +135,7 @@ class ecranPret:
     # tree view qui affiche l'historique des prêts d'un user
     def build_tv_pret_historique(self, frame):
         # init grid pret
-        columns = [ 'isbn', 'titre', 'dateDePret', 'dateRetour']
+        columns = [ 'isbn', 'titre', 'dateDePret', 'dateRetour','mediatheque']
 
         self.tv_pret_historique = ttk.Treeview(frame, columns=columns, show="headings",style='info.Treeview')
         for col in columns:
@@ -216,15 +223,14 @@ class ecranPret:
         lb_nom = Label(frame, text = "1 - Selectionnez un emprunteur: ").grid(row = 1, column = 0, padx = 0, pady = 0)
 
 
-
+        # champe de filtre
         self.sv_nom_selectionne = StringVar()
-
         self.e_nom = Entry(frame,textvariable=self.sv_nom_selectionne, width=60)
         self.e_nom.bind('<KeyRelease>', self.check)
         self.e_nom.grid(row = 1, column = 1, padx = 0, pady = 0,sticky=W,columnspan = 3)
 
-
-        self.utilisateurs = self.parent.db.fetch("Select nom,prenom,dateDeNaissance,adresse,tel,utilisateur_id from utilisateurs")
+        # liste des utilisateurs
+        self.utilisateurs = self.parent.db.fetch("Select nom,prenom,code, dateDeNaissance,adresse,tel,utilisateur_id from utilisateurs")
         self.selectionFiltred = self.utilisateurs
 
 
@@ -232,8 +238,9 @@ class ecranPret:
         self.lb_utilisateur.bind('<<ListboxSelect>>',self.CurSelet)
         self.lb_utilisateur.grid(row=2,column=1, padx = 0, pady = 0,sticky=W,columnspan = 3)
 
+        # peuple la liste des users
         for user in self.utilisateurs:
-            self.lb_utilisateur.insert(END,user[0]+" "+user[1])
+            self.lb_utilisateur.insert(END,user[0]+" "+user[1]+" "+user[2])
 
 
 
