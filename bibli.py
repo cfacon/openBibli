@@ -88,6 +88,12 @@ class Bibli:
         self.p.add(self.p_right)
 
         # boutons menu gauche
+
+        #  affiche la version        
+        self.lb_vide = Label(self.fenetre, text = "")
+        self.lb_version = Label(self.fenetre, text = "Version 1.02")
+        self.lb_version.pack()
+
         self.bt_pret=Button(self.fenetre, text="Prêt", command=lambda: self.ep.afficherEcran(self.p_right, self.fenetre, self.db))
         self.bt_pret.pack()
         self.bt_user=Button(self.fenetre, text="Utilisateurs", command=lambda: self.usr.afficherEcran(self.p_right, self.fenetre, self.db))
@@ -100,6 +106,8 @@ class Bibli:
         self.p_left.add(self.bt_user)
         self.p_left.add(self.bt_catalogue)
         self.p_left.add(self.bt_close)
+        self.p_left.add(self.lb_version)
+        self.p_left.add(self.lb_vide)
         self.lb_utilisateur = None
         self.p.pack()
 
