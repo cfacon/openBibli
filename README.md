@@ -7,3 +7,10 @@ L'utilisation d'une douchette simplifie son utilisation en scannant les codes ba
 ### Catalogue
 ### Prêt
 
+## RoadMap
+### ecran pret : ajouter un filtre sur numéro
+### ecran catalogue : ajouter un filtre sur isbn
+
+### ecran uilisateur : ajouter un filtre sur numéro / nom
+### ajouter systeme de maj
+#### ajouter un export d'etiquette avec isbn / num pour les livres sans isbn !
