@@ -11,11 +11,17 @@ import ecranCatalogue
 import logging
 import sys
 import configparser
+from urllib.request import urlopen
+
 
 config = configparser.ConfigParser()
 config.sections()
 config.read('bibli.ini')
 config.sections()
+
+
+version_url = "https://raw.githubusercontent.com/cfacon/openBibli/main/version"
+version = '1.02'
 
 #prepare les logs
 def setup_custom_logger(name):
@@ -91,8 +97,20 @@ class Bibli:
 
         #  affiche la version        
         self.lb_vide = Label(self.fenetre, text = "")
-        self.lb_version = Label(self.fenetre, text = "Version 1.02")
+
+        # chercher la dernier version en ligne
+        
+        try:
+            last_version = str(urlopen(version_url).read())[2:7]
+            print(last_version)
+        except Exception:
+            logger.exception("impossible de trouver la dernière version online")
+        
+
+        self.lb_version = Label(self.fenetre, text = "Votre version"+version)
         self.lb_version.pack()
+        self.lb_lastVersion = Label(self.fenetre, text = "Version dispo "+last_version)
+        self.lb_lastVersion.pack()
 
         self.bt_pret=Button(self.fenetre, text="Prêt", command=lambda: self.ep.afficherEcran(self.p_right, self.fenetre, self.db))
         self.bt_pret.pack()
@@ -107,6 +125,7 @@ class Bibli:
         self.p_left.add(self.bt_catalogue)
         self.p_left.add(self.bt_close)
         self.p_left.add(self.lb_version)
+        self.p_left.add(self.lb_lastVersion)
         self.p_left.add(self.lb_vide)
         self.lb_utilisateur = None
         self.p.pack()
